@@ -2,7 +2,6 @@ name: reviewdog
 
 on:
   pull_request:
-    branches: [ main ]
 
 jobs:
   reviewdog-github-check:
@@ -19,14 +18,14 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install textlint
-        run:  'npm install --save-dev textlint textlint-rule-preset-smarthr textlint-rule-prh'
+        run:  'npm install --save-dev textlint textlint-rule-preset-ja-technical-writing textlint-rule-prh'
       
       - name: Install dependent module
         run: npm install
       
-      - name: Execute textlint for ブログ記事
+      - name: Execute textlint
         run: |
-          npx textlint -f checkstyle "articles/*.md" >> .textlint.log
+          npx textlint -f checkstyle "*.md" >> .textlint.log
 
       - name: Run reviewdog
         if: failure()
