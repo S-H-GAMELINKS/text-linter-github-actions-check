@@ -25,7 +25,7 @@ jobs:
       
       - name: Execute textlint
         run: |
-          npx textlint -f checkstyle "*.md" >> .textlint.log
+          npx textlint -f checkstyle "./*/*/*/text.md" >> .textlint.log
 
       - name: Run reviewdog
         if: failure()
