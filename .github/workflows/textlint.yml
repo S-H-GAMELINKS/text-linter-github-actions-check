@@ -1,24 +1,36 @@
-name: 'Run textlint with reviewdog'
-on: [pull_request]
+name: reviewdog
+
+on:
+  pull_request:
+    branches: [ main ]
+
 jobs:
-  textlint:
-    runs-on: Ubuntu-latest
-    container:
-      image: node:current-alpine
-      env:
-        LEVEL: error
-        FLAGS: src/
+  reviewdog-github-check:
+    name: reviewdog (github-check)
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v1
-      - name: setup-reviewdog
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - uses: actions/setup-node@v2
+
+      - uses: actions/checkout@v2
+
+      - name: Install textlint
+        run:  'npm install --save-dev textlint textlint-rule-preset-smarthr textlint-rule-prh'
+      
+      - name: Install dependent module
+        run: npm install
+      
+      - name: Execute textlint for ブログ記事
         run: |
-          mkdir -p $HOME/bin && wget -O - -q https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s [vX.Y.Z]
-      - name: installl-textlint
-        run: |
-          npm i -g textlint textlint-rule-preset-ja-technical-writing
-      - name: run-reviewdog
+          npx textlint -f checkstyle "articles/*.md" >> .textlint.log
+
+      - name: Run reviewdog
+        if: failure()
         env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.TOKEN }}
         run: |
-          $(npm bin)/textlint -f checkstyle "${FLAGS:-'.'}" \
-            | reviewdog -f=checkstyle -name="textlint" -diff="git diff ${{ github.event.pull_request.base.ref }}" -reporter=github-pr-review -level="${LEVEL}"
+          cat .textlint.log | reviewdog -f=checkstyle -name="textlint" -reporter="github-pr-review"
